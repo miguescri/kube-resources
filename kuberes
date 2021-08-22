@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Translate resources to JSON
+JSON_RES=$(yq '.' $@)
+
+# Separate resources by kind
+POD=$(echo $JSON_RES | jq 'select(.kind == "Pod")')
+RS=$(echo $JSON_RES | jq 'select(.kind == "Deployment" or .kind == "Replicaset" or .kind == "StatefulSet")')
+HPA=$(echo $JSON_RES | jq 'select(.kind == "HorizontalPodAutoscaler")')
+
+# Homogenize the information of Pods and replication controllers
+POD=$(echo $POD | jq '{apiVersion, kind, name: .metadata.name, containers: .spec.containers, minReplicas: 1, maxReplicas: 1}')
+RS=$(echo $RS | jq '{apiVersion, kind, name: .metadata.name, containers: .spec.template.spec.containers, minReplicas: .spec.replicas, maxReplicas: .spec.replicas}')
+TOTAL=$POD$RS
+
+# TODO: update .minReplicas and -maxReplicas with the info from HPAs
+
+# Eliminate all the containers information except requests and limits
+TOTAL=$(echo $TOTAL | jq '{apiVersion, kind, name, minReplicas, maxReplicas, requests: [(.containers[] | .resources.requests)], limits: [(.containers[] | .resources.limits)]}')
+# Put together in arrays all the requests.cpu, requests.memory, limits.cpu and limits.memory
+TOTAL=$(echo $TOTAL | jq '{apiVersion, kind, name, minReplicas, maxReplicas, requests: {cpu: [(.requests[] | .cpu)], memory: [(.requests[] | .memory)]}, limits: {cpu: [(.limits[] | .cpu)], memory: [(.limits[] | .memory)]}}')
+
+# TODO: process the values of the limits and requests and sum them taking into consideration the units (1Gi + 512Mi = 1.5Gi)
+
+# Print the result in a way that makes it possible to diff:
+# - Resources are sorted by name.
+# - If there are resources that share name, they are ordered by kind.
+# - Object keys are sorted alphabetically
+echo $TOTAL | jq 'sort_by(.name, .kind)[]' -s -S  # -s receives inputs as array, -S sort object keys in output
