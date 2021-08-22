@@ -8,6 +8,11 @@ found in the input. The output is consistent regardless of the order of the inpu
 YAML, so it can be used with `diff` to identify changes exclusively related to the definition of CPU and 
 memory.
 
+## Requirements
+
+The `kuberes` script needs [bash](https://www.gnu.org/software/bash/), [jq](https://stedolan.github.io/jq/)
+and [yq](https://github.com/kislyuk/yq) to work.
+
 ## Usage
 
 Pass the names of the files to parse as parameters or pipe the YAML text. The latter option is useful
