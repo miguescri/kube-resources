@@ -25,8 +25,6 @@ done
 
 TOTAL=$POD$RS
 
-# TODO: update .minReplicas and -maxReplicas with the info from HPAs
-
 # Eliminate all the containers information except requests and limits
 TOTAL=$(echo $TOTAL | jq '{apiVersion, kind, name, minReplicas, maxReplicas, requests: [(.containers[] | .resources.requests)], limits: [(.containers[] | .resources.limits)]}')
 # Put together in arrays all the requests.cpu, requests.memory, limits.cpu and limits.memory
