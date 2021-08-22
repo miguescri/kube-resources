@@ -28,4 +28,4 @@ TOTAL=$(echo $TOTAL | jq '{apiVersion, kind, name, minReplicas, maxReplicas, req
 # - Resources are sorted by name.
 # - If there are resources that share name, they are ordered by kind.
 # - Object keys are sorted alphabetically
-echo $TOTAL | jq 'sort_by(.name, .kind)[]' -s -S  # -s receives inputs as array, -S sort object keys in output
+echo $TOTAL | jq 'sort_by(.name, .kind)' -s -S  # -s receives inputs as array, -S sort object keys in output
