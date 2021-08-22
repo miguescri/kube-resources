@@ -1,7 +1,8 @@
 # kube-resources
 
 A simple tool built on top of [jq](https://stedolan.github.io/jq/) that summarizes the CPU and memory 
-requests/limits in Kubernetes manifests.
+requests/limits in Kubernetes manifests. It takes into consideration `HorizontalPodAutoscaler`
+objects that may affect the number of replicas.
 
 The output is a JSON array containing an object for each workload resource (Pod, Deployment, StatefulSet...)
 found in the input. The output is consistent regardless of the order of the inputs files or the keys in the 
@@ -60,8 +61,8 @@ The `example` folder contains a couple of Kubernetes resources that lead to the 
         "256Mi"
       ]
     },
-    "maxReplicas": 2,
-    "minReplicas": 2,
+    "maxReplicas": 5,
+    "minReplicas": 1,
     "name": "my-deplo",
     "requests": {
       "cpu": [

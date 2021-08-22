@@ -13,6 +13,16 @@ HPA=$(echo $JSON_RES | jq 'select(.kind == "HorizontalPodAutoscaler")')
 # Homogenize the information of Pods and replication controllers
 POD=$(echo $POD | jq '{apiVersion, kind, name: .metadata.name, containers: .spec.containers, minReplicas: 1, maxReplicas: 1}')
 RS=$(echo $RS | jq '{apiVersion, kind, name: .metadata.name, containers: .spec.template.spec.containers, minReplicas: .spec.replicas, maxReplicas: .spec.replicas}')
+
+# Update replication controllers with the min and max replica values form HorizontalPodAutoscaler
+for i in $(echo $HPA | jq -c '.spec') ; do
+  FILTER=".apiVersion==$(echo $i | jq -c '.scaleTargetRef.apiVersion') and .kind==$(echo $i | jq -c '.scaleTargetRef.kind') and .name==$(echo $i | jq -c '.scaleTargetRef.name')"
+  MAX=$(echo $i | jq '.maxReplicas')
+  MIN=$(echo $i | jq '.minReplicas')
+
+  RS=$(echo $RS | jq "(select($FILTER) | . + {maxReplicas: $MAX, minReplicas: $MIN}), select($FILTER | not)")
+done
+
 TOTAL=$POD$RS
 
 # TODO: update .minReplicas and -maxReplicas with the info from HPAs
