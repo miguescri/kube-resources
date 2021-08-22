@@ -5,8 +5,10 @@ JSON_RES=$(yq '.' $@)
 
 # Separate resources by kind
 POD=$(echo $JSON_RES | jq 'select(.kind == "Pod")')
-RS=$(echo $JSON_RES | jq 'select(.kind == "Deployment" or .kind == "Replicaset" or .kind == "StatefulSet")')
+RS=$(echo $JSON_RES | jq 'select(.kind == "Deployment" or .kind == "ReplicaSet" or .kind == "StatefulSet" or .kind == "ReplicationController")')
 HPA=$(echo $JSON_RES | jq 'select(.kind == "HorizontalPodAutoscaler")')
+
+# TODO: think how to manage DaemonSet
 
 # Homogenize the information of Pods and replication controllers
 POD=$(echo $POD | jq '{apiVersion, kind, name: .metadata.name, containers: .spec.containers, minReplicas: 1, maxReplicas: 1}')
