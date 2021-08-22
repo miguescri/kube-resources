@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: my-other-deplo
+  name: my-other-deplo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-other-deplo
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: my-other-deplo
+    spec:
+      containers:
+      - image: httpd
+        name: httpd
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1024Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+      - image: fluentd
+        name: fluentd
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 50m
+            memory: 128Mi
+status: {}

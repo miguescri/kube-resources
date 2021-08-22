@@ -76,6 +76,33 @@ The `example` folder contains a couple of Kubernetes resources that lead to the 
     }
   },
   {
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "limits": {
+      "cpu": [
+        "500m",
+        "200m"
+      ],
+      "memory": [
+        "1024Mi",
+        "256Mi"
+      ]
+    },
+    "maxReplicas": 3,
+    "minReplicas": 3,
+    "name": "my-other-deplo",
+    "requests": {
+      "cpu": [
+        "250m",
+        "50m"
+      ],
+      "memory": [
+        "256Mi",
+        "128Mi"
+      ]
+    }
+  },
+  {
     "apiVersion": "v1",
     "kind": "Pod",
     "limits": {
