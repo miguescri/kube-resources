@@ -1,5 +1,14 @@
 #!/bin/bash
 
+finish () {
+  # Print the result in a way that makes it possible to diff:
+  # - Resources are sorted by name.
+  # - If there are resources that share name, they are ordered by kind.
+  # - Object keys are sorted alphabetically
+  echo $TOTAL | jq 'sort_by(.name, .kind)' -s -S  # -s receives inputs as array, -S sort object keys in output
+  exit 0
+}
+
 # Translate resources to JSON
 JSON_RES=$(yq '.' $@)
 
@@ -30,10 +39,26 @@ TOTAL=$(echo $TOTAL | jq '{apiVersion, kind, name, minReplicas, maxReplicas, req
 # Put together in arrays all the requests.cpu, requests.memory, limits.cpu and limits.memory
 TOTAL=$(echo $TOTAL | jq '{apiVersion, kind, name, minReplicas, maxReplicas, requests: {cpu: [(.requests[] | .cpu)], memory: [(.requests[] | .memory)]}, limits: {cpu: [(.limits[] | .cpu)], memory: [(.limits[] | .memory)]}}')
 
-# TODO: process the values of the limits and requests and sum them taking into consideration the units (1Gi + 512Mi = 1.5Gi)
+# Sum the values of requests and limits taking units into consideration
+PYTHON_CODE=$(cat <<'EOF'
+from pint import UnitRegistry
+ureg = UnitRegistry()
+text = input().strip().strip('"')  # Accept lines surrounded by quotation marks
+result = ureg(text)
+print(f'{result:~}')
+EOF
+)
 
-# Print the result in a way that makes it possible to diff:
-# - Resources are sorted by name.
-# - If there are resources that share name, they are ordered by kind.
-# - Object keys are sorted alphabetically
-echo $TOTAL | jq 'sort_by(.name, .kind)' -s -S  # -s receives inputs as array, -S sort object keys in output
+T=""
+for i in $(echo $TOTAL | jq -c '.') ; do
+  REQUESTS_CPU=$(echo $i | jq '[(.requests.cpu[] | tostring | .+"s")] | join(" + ")' | python3 -c "$PYTHON_CODE")
+  LIMITS_CPU=$(echo $i | jq '[(.limits.cpu[] | tostring | .+"s")] | join(" + ")' | python3 -c "$PYTHON_CODE")
+  REQUESTS_MEMORY=$(echo $i | jq '[(.requests.memory[] | tostring | .+"B")] | join(" + ")' | python3 -c "$PYTHON_CODE")
+  LIMITS_MEMORY=$(echo $i | jq '[(.limits.memory[] | tostring | .+"B")] | join(" + ")' | python3 -c "$PYTHON_CODE")
+
+  T=$T$(echo $i | jq "{apiVersion, kind, name, minReplicas, maxReplicas, requests: {cpu: \"$REQUESTS_CPU\", memory: \"$REQUESTS_MEMORY\"}, limits: {cpu: \"$LIMITS_CPU\", memory: \"$LIMITS_MEMORY\"}}")
+done
+
+TOTAL=$T
+
+finish

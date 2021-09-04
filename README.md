@@ -11,8 +11,13 @@ memory.
 
 ## Requirements
 
-The `kuberes` script needs [bash](https://www.gnu.org/software/bash/), [jq](https://stedolan.github.io/jq/)
-and [yq](https://github.com/kislyuk/yq) to work.
+The `kuberes` script needs:
+
+- [bash](https://www.gnu.org/software/bash/)
+- [jq](https://stedolan.github.io/jq/)
+- [yq](https://github.com/kislyuk/yq)
+- Python >= 3.6
+- [Pint](https://pint.readthedocs.io/en/stable/) Python package
 
 ## Usage
 
