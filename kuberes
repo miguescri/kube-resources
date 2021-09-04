@@ -1,5 +1,9 @@
 #!/bin/bash
 
+MODE_0="m0"
+MODE_1="m1"
+MODE_2="m2"
+
 finish () {
   # Print the result in a way that makes it possible to diff:
   # - Resources are sorted by name.
@@ -8,6 +12,28 @@ finish () {
   echo $TOTAL | jq 'sort_by(.name, .kind)' -s -S  # -s receives inputs as array, -S sort object keys in output
   exit 0
 }
+
+MODE=$1
+shift
+
+if ! [[ "$MODE" =~ ^($MODE_0|$MODE_1|$MODE_2)$ ]]; then
+  cat <<EOF
+$MODE is not a valid working mode
+
+USAGE: $0 MODE FILE_1 FILE_2 ...
+If no filenames are provided, will read from standard input
+
+Modes:
+
+- $MODE_0 : raw information from the YAML. Also add minReplicas and maxReplicas values based on Horizontal Pod Autoscalers
+- $MODE_1 : top level objects with lists of the underlying container requests and limits
+- $MODE_2 : top level objects with the sum of the underlying container requests and limits
+
+EOF
+
+  exit 1
+fi
+
 
 # Translate resources to JSON
 JSON_RES=$(yq '.' $@)
@@ -34,10 +60,19 @@ done
 
 TOTAL=$POD$RS
 
+if [ $MODE == $MODE_0 ]; then
+  finish
+fi
+
+
 # Eliminate all the containers information except requests and limits
 TOTAL=$(echo $TOTAL | jq '{apiVersion, kind, name, minReplicas, maxReplicas, requests: [(.containers[] | .resources.requests)], limits: [(.containers[] | .resources.limits)]}')
 # Put together in arrays all the requests.cpu, requests.memory, limits.cpu and limits.memory
 TOTAL=$(echo $TOTAL | jq '{apiVersion, kind, name, minReplicas, maxReplicas, requests: {cpu: [(.requests[] | .cpu)], memory: [(.requests[] | .memory)]}, limits: {cpu: [(.limits[] | .cpu)], memory: [(.limits[] | .memory)]}}')
+
+if [ $MODE == $MODE_1 ]; then
+  finish
+fi
 
 # Sum the values of requests and limits taking units into consideration
 PYTHON_CODE=$(cat <<'EOF'
@@ -61,4 +96,6 @@ done
 
 TOTAL=$T
 
-finish
+if [ $MODE == $MODE_2 ]; then
+  finish
+fi
