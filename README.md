@@ -37,6 +37,21 @@ like this will not work as expected:
 cat example/* | ./kuberes m2 # Documents are appended one after the other without using ---
 ```
 
+### Docker
+
+A Dockerfile is included in case you prefer not to install locally the dependencies.
+
+```shell
+docker build -t kuberes:latest .
+```
+
+Mount the folder with the Kubernetes resources into `/data` and pass the usual CLI parameters:
+
+```shell
+docker run --rm -v $PWD/example:/data:ro kuberes m2 '/data/*'    
+```
+
+
 ## Modes
 
 The tool provides different working modes depending on the desired level of information aggregation.
