@@ -12,7 +12,10 @@ finish () {
   echo $TOTAL | jq 'sort_by(.name, .kind)' -s -S  # -s receives inputs as array, -S sort object keys in output
 
   # Clean Python background job
-  kill %%
+  if [ -n "$PYTHON_CODE" ]; then
+    kill %%
+  fi
+
   exit 0
 }
 
