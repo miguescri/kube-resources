@@ -10,6 +10,9 @@ finish () {
   # - If there are resources that share name, they are ordered by kind.
   # - Object keys are sorted alphabetically
   echo $TOTAL | jq 'sort_by(.name, .kind)' -s -S  # -s receives inputs as array, -S sort object keys in output
+
+  # Clean Python background job
+  kill %%
   exit 0
 }
 
@@ -76,20 +79,43 @@ fi
 
 # Sum the values of requests and limits taking units into consideration
 PYTHON_CODE=$(cat <<'EOF'
+import sys
 from pint import UnitRegistry
+
+file_in = sys.argv[1]
+file_out = sys.argv[2]
+
 ureg = UnitRegistry()
-text = input().strip().strip('"')  # Accept lines surrounded by quotation marks
-result = ureg(text)
-print(f'{result:~}')
+while True:
+    text = ''
+    with open(file_in, 'r') as fi:
+        while True:
+            line = fi.read()
+            if len(line) == 0:
+                break
+            text = line.strip().strip('"')  # Accept lines surrounded by quotation marks
+
+    if len(text) != 0:
+        result = ureg(text)
+        with open(file_out, 'w') as fo:
+            fo.write(f'{result:~}')
 EOF
 )
 
+# Create a background Python job with the unit parser to avoid constant reinitialization
+PIPE_IN="/tmp/kuberes-pipe-in-$RANDOM"
+PIPE_OUT="/tmp/kuberes-pipe-out-$RANDOM"
+
+mkfifo $PIPE_IN
+mkfifo $PIPE_OUT
+python3 -c "$PYTHON_CODE" $PIPE_IN $PIPE_OUT &
+
 T=""
 for i in $(echo $TOTAL | jq -c '.') ; do
-  REQUESTS_CPU=$(echo $i | jq '[(.requests.cpu[] | tostring | .+"s")] | join(" + ")' | python3 -c "$PYTHON_CODE")
-  LIMITS_CPU=$(echo $i | jq '[(.limits.cpu[] | tostring | .+"s")] | join(" + ")' | python3 -c "$PYTHON_CODE")
-  REQUESTS_MEMORY=$(echo $i | jq '[(.requests.memory[] | tostring | .+"B")] | join(" + ")' | python3 -c "$PYTHON_CODE")
-  LIMITS_MEMORY=$(echo $i | jq '[(.limits.memory[] | tostring | .+"B")] | join(" + ")' | python3 -c "$PYTHON_CODE")
+  REQUESTS_CPU=$(echo $i | jq '[(.requests.cpu[] | tostring | .+"s")] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+  LIMITS_CPU=$(echo $i | jq '[(.limits.cpu[] | tostring | .+"s")] | join(" + ")'  > $PIPE_IN && cat $PIPE_OUT)
+  REQUESTS_MEMORY=$(echo $i | jq '[(.requests.memory[] | tostring | .+"B")] | join(" + ")'  > $PIPE_IN && cat $PIPE_OUT)
+  LIMITS_MEMORY=$(echo $i | jq '[(.limits.memory[] | tostring | .+"B")] | join(" + ")'  > $PIPE_IN && cat $PIPE_OUT)
 
   T=$T$(echo $i | jq "{apiVersion, kind, name, minReplicas, maxReplicas, requests: {cpu: \"$REQUESTS_CPU\", memory: \"$REQUESTS_MEMORY\"}, limits: {cpu: \"$LIMITS_CPU\", memory: \"$LIMITS_MEMORY\"}}")
 done
