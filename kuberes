@@ -4,6 +4,7 @@ MODE_0="m0"
 MODE_1="m1"
 MODE_2="m2"
 MODE_3="m3"
+MODE_4="m4"
 
 finish () {
   # Print the result in a way that makes it possible to diff:
@@ -23,7 +24,7 @@ finish () {
 MODE=$1
 shift
 
-if ! [[ "$MODE" =~ ^($MODE_0|$MODE_1|$MODE_2|$MODE_3)$ ]]; then
+if ! [[ "$MODE" =~ ^($MODE_0|$MODE_1|$MODE_2|$MODE_3|$MODE_4)$ ]]; then
   cat <<EOF
 $MODE is not a valid working mode
 
@@ -35,7 +36,8 @@ Modes:
 - $MODE_0 : raw information from the YAML. Also add minReplicas and maxReplicas values based on Horizontal Pod Autoscalers
 - $MODE_1 : top level objects with lists of the underlying container requests and limits
 - $MODE_2 : top level objects with the sum of the underlying container requests and limits
-- $MODE_· : top level objects with minRequests, minLimits, maxRequests and maxLimits, taking into consideration minReplicas and maxReplicas
+- $MODE_3 : top level objects with minRequests, minLimits, maxRequests and maxLimits, taking into consideration minReplicas and maxReplicas
+- $MODE_4 : summary of the total minRequests, minLimits, maxRequests and maxLimits across all objects
 
 EOF
 
@@ -162,5 +164,23 @@ done
 TOTAL=$T
 
 if [ $MODE == $MODE_3 ]; then
+  finish
+fi
+
+### MODE 4 #############################################################################################################
+
+MAX_REQUESTS_CPU=$(echo $TOTAL | jq -s -r '[(.[] | .maxRequests.cpu)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MAX_REQUESTS_MEMORY=$(echo $TOTAL | jq -s -r '[(.[] | .maxRequests.memory)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MAX_LIMITS_CPU=$(echo $TOTAL | jq -s -r '[(.[] | .maxLimits.cpu)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MAX_LIMITS_MEMORY=$(echo $TOTAL | jq -s -r '[(.[] | .maxLimits.memory)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+
+MIN_REQUESTS_CPU=$(echo $TOTAL | jq -s -r '[(.[] | .minRequests.cpu)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MIN_REQUESTS_MEMORY=$(echo $TOTAL | jq -s -r '[(.[] | .minRequests.memory)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MIN_LIMITS_CPU=$(echo $TOTAL | jq -s -r '[(.[] | .minLimits.cpu)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MIN_LIMITS_MEMORY=$(echo $TOTAL | jq -s -r '[(.[] | .minLimits.memory)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+
+TOTAL="{\"maxRequestsCPU\": \"$MAX_REQUESTS_CPU\", \"maxRequestsMemory\": \"$MAX_REQUESTS_MEMORY\", \"maxLimitsCPU\": \"$MAX_LIMITS_CPU\", \"maxLimitsMemory\": \"$MAX_LIMITS_MEMORY\", \"minRequestsCPU\": \"$MIN_REQUESTS_CPU\", \"minRequestsMemory\": \"$MIN_REQUESTS_MEMORY\", \"minLimitsCPU\": \"$MIN_LIMITS_CPU\", \"minLimitsMemory\": \"$MIN_LIMITS_MEMORY\"}"
+
+if [ $MODE == $MODE_4 ]; then
   finish
 fi

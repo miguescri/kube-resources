@@ -402,6 +402,25 @@ and maxReplicas.
 ]
 ```
 
+### m4
+
+Summary of the total minRequests, minLimits, maxRequests and maxLimits across all objects.
+
+```json
+[
+  {
+    "maxLimitsCPU": "5850ms",
+    "maxLimitsMemory": "10802MiB",
+    "maxRequestsCPU": "2510ms",
+    "maxRequestsMemory": "3353MiB",
+    "minLimitsCPU": "3050ms",
+    "minLimitsMemory": "5682MiB",
+    "minRequestsCPU": "1310ms",
+    "minRequestsMemory": "1817MiB"
+  }
+]
+```
+
 ## Ordering and deterministic output
 
 The output follows a set of rules to make it deterministic:
