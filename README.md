@@ -280,46 +280,124 @@ Top level objects with the sum of the underlying container requests and limits.
     "apiVersion": "apps/v1",
     "kind": "Deployment",
     "limits": {
-      "cpu": "700 ms",
-      "memory": "1280 MiB"
+      "cpu": "700ms",
+      "memory": "1280MiB"
     },
     "maxReplicas": 5,
     "minReplicas": 1,
     "name": "my-deplo",
     "requests": {
-      "cpu": "300 ms",
-      "memory": "384 MiB"
+      "cpu": "300ms",
+      "memory": "384MiB"
     }
   },
   {
     "apiVersion": "apps/v1",
     "kind": "Deployment",
     "limits": {
-      "cpu": "700 ms",
-      "memory": "1280 MiB"
+      "cpu": "700ms",
+      "memory": "1280MiB"
     },
     "maxReplicas": 3,
     "minReplicas": 3,
     "name": "my-other-deplo",
     "requests": {
-      "cpu": "300 ms",
-      "memory": "384 MiB"
+      "cpu": "300ms",
+      "memory": "384MiB"
     }
   },
   {
     "apiVersion": "v1",
     "kind": "Pod",
     "limits": {
-      "cpu": "250 ms",
-      "memory": "562 MiB"
+      "cpu": "250ms",
+      "memory": "562MiB"
     },
     "maxReplicas": 1,
     "minReplicas": 1,
     "name": "my-pod",
     "requests": {
-      "cpu": "110 ms",
-      "memory": "281 MiB"
+      "cpu": "110ms",
+      "memory": "281MiB"
     }
+  }
+]
+```
+
+### m3
+
+Top level objects with minRequests, minLimits, maxRequests and maxLimits, taking into consideration minReplicas 
+and maxReplicas.
+```json
+[
+  {
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "maxLimits": {
+      "cpu": "3500ms",
+      "memory": "6400MiB"
+    },
+    "maxReplicas": 5,
+    "maxRequests": {
+      "cpu": "1500ms",
+      "memory": "1920MiB"
+    },
+    "minLimits": {
+      "cpu": "700ms",
+      "memory": "1280MiB"
+    },
+    "minReplicas": 1,
+    "minRequests": {
+      "cpu": "300ms",
+      "memory": "384MiB"
+    },
+    "name": "my-deplo"
+  },
+  {
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "maxLimits": {
+      "cpu": "2100ms",
+      "memory": "3840MiB"
+    },
+    "maxReplicas": 3,
+    "maxRequests": {
+      "cpu": "900ms",
+      "memory": "1152MiB"
+    },
+    "minLimits": {
+      "cpu": "2100ms",
+      "memory": "3840MiB"
+    },
+    "minReplicas": 3,
+    "minRequests": {
+      "cpu": "900ms",
+      "memory": "1152MiB"
+    },
+    "name": "my-other-deplo"
+  },
+  {
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "maxLimits": {
+      "cpu": "250ms",
+      "memory": "562MiB"
+    },
+    "maxReplicas": 1,
+    "maxRequests": {
+      "cpu": "110ms",
+      "memory": "281MiB"
+    },
+    "minLimits": {
+      "cpu": "250ms",
+      "memory": "562MiB"
+    },
+    "minReplicas": 1,
+    "minRequests": {
+      "cpu": "110ms",
+      "memory": "281MiB"
+    },
+    "name": "my-pod"
   }
 ]
 ```

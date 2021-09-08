@@ -3,6 +3,7 @@
 MODE_0="m0"
 MODE_1="m1"
 MODE_2="m2"
+MODE_3="m3"
 
 finish () {
   # Print the result in a way that makes it possible to diff:
@@ -22,7 +23,7 @@ finish () {
 MODE=$1
 shift
 
-if ! [[ "$MODE" =~ ^($MODE_0|$MODE_1|$MODE_2)$ ]]; then
+if ! [[ "$MODE" =~ ^($MODE_0|$MODE_1|$MODE_2|$MODE_3)$ ]]; then
   cat <<EOF
 $MODE is not a valid working mode
 
@@ -34,12 +35,15 @@ Modes:
 - $MODE_0 : raw information from the YAML. Also add minReplicas and maxReplicas values based on Horizontal Pod Autoscalers
 - $MODE_1 : top level objects with lists of the underlying container requests and limits
 - $MODE_2 : top level objects with the sum of the underlying container requests and limits
+- $MODE_· : top level objects with minRequests, minLimits, maxRequests and maxLimits, taking into consideration minReplicas and maxReplicas
 
 EOF
 
   exit 1
 fi
 
+
+### MODE 0 #############################################################################################################
 
 # Translate resources to JSON
 JSON_RES=$(yq '.' $@)
@@ -70,6 +74,7 @@ if [ $MODE == $MODE_0 ]; then
   finish
 fi
 
+### MODE 1 #############################################################################################################
 
 # Eliminate all the containers information except requests and limits
 TOTAL=$(echo $TOTAL | jq '{apiVersion, kind, name, minReplicas, maxReplicas, requests: [(.containers[] | .resources.requests)], limits: [(.containers[] | .resources.limits)]}')
@@ -79,6 +84,8 @@ TOTAL=$(echo $TOTAL | jq '{apiVersion, kind, name, minReplicas, maxReplicas, req
 if [ $MODE == $MODE_1 ]; then
   finish
 fi
+
+### MODE 2 #############################################################################################################
 
 # Sum the values of requests and limits taking units into consideration
 PYTHON_CODE=$(cat <<'EOF'
@@ -101,7 +108,7 @@ while True:
     if len(text) != 0:
         result = ureg(text)
         with open(file_out, 'w') as fo:
-            fo.write(f'{result:~}')
+            fo.write(f'{result:~}'.replace(' ', ''))  # Print in 100MiB format
 EOF
 )
 
@@ -115,10 +122,10 @@ python3 -c "$PYTHON_CODE" $PIPE_IN $PIPE_OUT &
 
 T=""
 for i in $(echo $TOTAL | jq -c '.') ; do
-  REQUESTS_CPU=$(echo $i | jq '[(.requests.cpu[] | tostring | .+"s")] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
-  LIMITS_CPU=$(echo $i | jq '[(.limits.cpu[] | tostring | .+"s")] | join(" + ")'  > $PIPE_IN && cat $PIPE_OUT)
-  REQUESTS_MEMORY=$(echo $i | jq '[(.requests.memory[] | tostring | .+"B")] | join(" + ")'  > $PIPE_IN && cat $PIPE_OUT)
-  LIMITS_MEMORY=$(echo $i | jq '[(.limits.memory[] | tostring | .+"B")] | join(" + ")'  > $PIPE_IN && cat $PIPE_OUT)
+  REQUESTS_CPU=$(echo $i | jq -r '[(.requests.cpu[] | tostring | .+"s")] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+  LIMITS_CPU=$(echo $i | jq -r '[(.limits.cpu[] | tostring | .+"s")] | join(" + ")'  > $PIPE_IN && cat $PIPE_OUT)
+  REQUESTS_MEMORY=$(echo $i | jq -r '[(.requests.memory[] | tostring | .+"B")] | join(" + ")'  > $PIPE_IN && cat $PIPE_OUT)
+  LIMITS_MEMORY=$(echo $i | jq -r '[(.limits.memory[] | tostring | .+"B")] | join(" + ")'  > $PIPE_IN && cat $PIPE_OUT)
 
   T=$T$(echo $i | jq "{apiVersion, kind, name, minReplicas, maxReplicas, requests: {cpu: \"$REQUESTS_CPU\", memory: \"$REQUESTS_MEMORY\"}, limits: {cpu: \"$LIMITS_CPU\", memory: \"$LIMITS_MEMORY\"}}")
 done
@@ -126,5 +133,34 @@ done
 TOTAL=$T
 
 if [ $MODE == $MODE_2 ]; then
+  finish
+fi
+
+### MODE 3 #############################################################################################################
+
+T=""
+for i in $(echo $TOTAL | jq -c '.') ; do
+  REQUESTS_CPU=$(echo $i | jq -r '.requests.cpu')
+  LIMITS_CPU=$(echo $i | jq -r '.limits.cpu')
+  REQUESTS_MEMORY=$(echo $i | jq -r '.requests.memory')
+  LIMITS_MEMORY=$(echo $i | jq -r '.limits.memory')
+  MAX_REPLICAS=$(echo $i | jq -r '.maxReplicas')
+  MIN_REPLICAS=$(echo $i | jq -r '.minReplicas')
+
+  MAX_REQUESTS_CPU=$(echo "$MAX_REPLICAS * $REQUESTS_CPU" > $PIPE_IN && cat $PIPE_OUT)
+  MAX_REQUESTS_MEMORY=$(echo "$MAX_REPLICAS * $REQUESTS_MEMORY" > $PIPE_IN && cat $PIPE_OUT)
+  MAX_LIMITS_CPU=$(echo "$MAX_REPLICAS * $LIMITS_CPU" > $PIPE_IN && cat $PIPE_OUT)
+  MAX_LIMITS_MEMORY=$(echo "$MAX_REPLICAS * $LIMITS_MEMORY" > $PIPE_IN && cat $PIPE_OUT)
+  MIN_REQUESTS_CPU=$(echo "$MIN_REPLICAS * $REQUESTS_CPU" > $PIPE_IN && cat $PIPE_OUT)
+  MIN_REQUESTS_MEMORY=$(echo "$MIN_REPLICAS * $REQUESTS_MEMORY" > $PIPE_IN && cat $PIPE_OUT)
+  MIN_LIMITS_CPU=$(echo "$MIN_REPLICAS * $LIMITS_CPU" > $PIPE_IN && cat $PIPE_OUT)
+  MIN_LIMITS_MEMORY=$(echo "$MIN_REPLICAS * $LIMITS_MEMORY" > $PIPE_IN && cat $PIPE_OUT)
+
+  T=$T$(echo $i | jq "{apiVersion, kind, name, minReplicas, maxReplicas, minRequests: {cpu: \"$MIN_REQUESTS_CPU\", memory: \"$MIN_REQUESTS_MEMORY\"}, minLimits: {cpu: \"$MIN_LIMITS_CPU\", memory: \"$MIN_LIMITS_MEMORY\"}, maxRequests: {cpu: \"$MAX_REQUESTS_CPU\", memory: \"$MAX_REQUESTS_MEMORY\"}, maxLimits: {cpu: \"$MAX_LIMITS_CPU\", memory: \"$MAX_LIMITS_MEMORY\"}}")
+done
+
+TOTAL=$T
+
+if [ $MODE == $MODE_3 ]; then
   finish
 fi
