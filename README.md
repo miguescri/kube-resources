@@ -333,73 +333,86 @@ and maxReplicas.
   {
     "apiVersion": "apps/v1",
     "kind": "Deployment",
-    "maxLimits": {
-      "cpu": "3500ms",
-      "memory": "6400MiB"
+    "limits": {
+      "cpu": {
+        "max": "3500ms",
+        "min": "700ms"
+      },
+      "memory": {
+        "max": "6400MiB",
+        "min": "1280MiB"
+      }
     },
     "maxReplicas": 5,
-    "maxRequests": {
-      "cpu": "1500ms",
-      "memory": "1920MiB"
-    },
-    "minLimits": {
-      "cpu": "700ms",
-      "memory": "1280MiB"
-    },
     "minReplicas": 1,
-    "minRequests": {
-      "cpu": "300ms",
-      "memory": "384MiB"
-    },
-    "name": "my-deplo"
+    "name": "my-deplo",
+    "requests": {
+      "cpu": {
+        "max": "1500ms",
+        "min": "300ms"
+      },
+      "memory": {
+        "max": "1920MiB",
+        "min": "384MiB"
+      }
+    }
   },
   {
     "apiVersion": "apps/v1",
     "kind": "Deployment",
-    "maxLimits": {
-      "cpu": "2100ms",
-      "memory": "3840MiB"
+    "limits": {
+      "cpu": {
+        "max": "2100ms",
+        "min": "2100ms"
+      },
+      "memory": {
+        "max": "3840MiB",
+        "min": "3840MiB"
+      }
     },
     "maxReplicas": 3,
-    "maxRequests": {
-      "cpu": "900ms",
-      "memory": "1152MiB"
-    },
-    "minLimits": {
-      "cpu": "2100ms",
-      "memory": "3840MiB"
-    },
     "minReplicas": 3,
-    "minRequests": {
-      "cpu": "900ms",
-      "memory": "1152MiB"
-    },
-    "name": "my-other-deplo"
+    "name": "my-other-deplo",
+    "requests": {
+      "cpu": {
+        "max": "900ms",
+        "min": "900ms"
+      },
+      "memory": {
+        "max": "1152MiB",
+        "min": "1152MiB"
+      }
+    }
   },
   {
     "apiVersion": "v1",
     "kind": "Pod",
-    "maxLimits": {
-      "cpu": "250ms",
-      "memory": "562MiB"
+    "limits": {
+      "cpu": {
+        "max": "250ms",
+        "min": "250ms"
+      },
+      "memory": {
+        "max": "562MiB",
+        "min": "562MiB"
+      }
     },
     "maxReplicas": 1,
-    "maxRequests": {
-      "cpu": "110ms",
-      "memory": "281MiB"
-    },
-    "minLimits": {
-      "cpu": "250ms",
-      "memory": "562MiB"
-    },
     "minReplicas": 1,
-    "minRequests": {
-      "cpu": "110ms",
-      "memory": "281MiB"
-    },
-    "name": "my-pod"
+    "name": "my-pod",
+    "requests": {
+      "cpu": {
+        "max": "110ms",
+        "min": "110ms"
+      },
+      "memory": {
+        "max": "281MiB",
+        "min": "281MiB"
+      }
+    }
   }
 ]
+
 ```
 
 ### total

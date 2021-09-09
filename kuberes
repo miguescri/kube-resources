@@ -158,7 +158,7 @@ for i in $(echo $TOTAL | jq -c '.') ; do
   MIN_LIMITS_CPU=$(echo "$MIN_REPLICAS * $LIMITS_CPU" > $PIPE_IN && cat $PIPE_OUT)
   MIN_LIMITS_MEMORY=$(echo "$MIN_REPLICAS * $LIMITS_MEMORY" > $PIPE_IN && cat $PIPE_OUT)
 
-  T=$T$(echo $i | jq "{apiVersion, kind, name, minReplicas, maxReplicas, minRequests: {cpu: \"$MIN_REQUESTS_CPU\", memory: \"$MIN_REQUESTS_MEMORY\"}, minLimits: {cpu: \"$MIN_LIMITS_CPU\", memory: \"$MIN_LIMITS_MEMORY\"}, maxRequests: {cpu: \"$MAX_REQUESTS_CPU\", memory: \"$MAX_REQUESTS_MEMORY\"}, maxLimits: {cpu: \"$MAX_LIMITS_CPU\", memory: \"$MAX_LIMITS_MEMORY\"}}")
+  T=$T$(echo $i | jq "{apiVersion, kind, name, minReplicas, maxReplicas, requests: {cpu: {min: \"$MIN_REQUESTS_CPU\", max: \"$MAX_REQUESTS_CPU\"}, memory: {min: \"$MIN_REQUESTS_MEMORY\", max: \"$MAX_REQUESTS_MEMORY\"}}, limits: {cpu: {min: \"$MIN_LIMITS_CPU\", max: \"$MAX_LIMITS_CPU\"}, memory: {min: \"$MIN_LIMITS_MEMORY\", max: \"$MAX_LIMITS_MEMORY\"}}}")
 done
 
 TOTAL=$T
