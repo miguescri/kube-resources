@@ -169,17 +169,17 @@ fi
 
 ### MODE 4 #############################################################################################################
 
-MAX_REQUESTS_CPU=$(echo $TOTAL | jq -s -r '[(.[] | .maxRequests.cpu)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
-MAX_REQUESTS_MEMORY=$(echo $TOTAL | jq -s -r '[(.[] | .maxRequests.memory)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
-MAX_LIMITS_CPU=$(echo $TOTAL | jq -s -r '[(.[] | .maxLimits.cpu)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
-MAX_LIMITS_MEMORY=$(echo $TOTAL | jq -s -r '[(.[] | .maxLimits.memory)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MAX_REQUESTS_CPU=$(echo $TOTAL | jq -s -r '[(.[] | .requests.cpu.max)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MAX_REQUESTS_MEMORY=$(echo $TOTAL | jq -s -r '[(.[] | .requests.memory.max)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MAX_LIMITS_CPU=$(echo $TOTAL | jq -s -r '[(.[] | .limits.cpu.max)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MAX_LIMITS_MEMORY=$(echo $TOTAL | jq -s -r '[(.[] | .limits.memory.max)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
 
-MIN_REQUESTS_CPU=$(echo $TOTAL | jq -s -r '[(.[] | .minRequests.cpu)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
-MIN_REQUESTS_MEMORY=$(echo $TOTAL | jq -s -r '[(.[] | .minRequests.memory)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
-MIN_LIMITS_CPU=$(echo $TOTAL | jq -s -r '[(.[] | .minLimits.cpu)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
-MIN_LIMITS_MEMORY=$(echo $TOTAL | jq -s -r '[(.[] | .minLimits.memory)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MIN_REQUESTS_CPU=$(echo $TOTAL | jq -s -r '[(.[] | .requests.cpu.min)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MIN_REQUESTS_MEMORY=$(echo $TOTAL | jq -s -r '[(.[] | .requests.memory.min)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MIN_LIMITS_CPU=$(echo $TOTAL | jq -s -r '[(.[] | .limits.cpu.min)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
+MIN_LIMITS_MEMORY=$(echo $TOTAL | jq -s -r '[(.[] | .limits.memory.min)] | join(" + ")' > $PIPE_IN && cat $PIPE_OUT)
 
-TOTAL="{\"maxRequestsCPU\": \"$MAX_REQUESTS_CPU\", \"maxRequestsMemory\": \"$MAX_REQUESTS_MEMORY\", \"maxLimitsCPU\": \"$MAX_LIMITS_CPU\", \"maxLimitsMemory\": \"$MAX_LIMITS_MEMORY\", \"minRequestsCPU\": \"$MIN_REQUESTS_CPU\", \"minRequestsMemory\": \"$MIN_REQUESTS_MEMORY\", \"minLimitsCPU\": \"$MIN_LIMITS_CPU\", \"minLimitsMemory\": \"$MIN_LIMITS_MEMORY\"}"
+TOTAL="{\"requests\": {\"cpu\": {\"min\": \"$MIN_REQUESTS_CPU\", \"max\": \"$MAX_REQUESTS_CPU\"}, \"memory\": {\"min\": \"$MIN_REQUESTS_MEMORY\", \"max\": \"$MAX_REQUESTS_MEMORY\"}}, \"limits\": {\"cpu\": {\"min\": \"$MIN_LIMITS_CPU\", \"max\": \"$MAX_LIMITS_CPU\"}, \"memory\": {\"min\": \"$MIN_LIMITS_MEMORY\", \"max\": \"$MAX_LIMITS_MEMORY\"}}}"
 
 if [ $MODE == $MODE_4 ]; then
   finish
