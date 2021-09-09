@@ -418,6 +418,15 @@ and maxReplicas.
 
 Summary of the total minRequests, minLimits, maxRequests and maxLimits across all objects.
 
+
+This information means that your pods:
+
+- To just exist without activity, need `.requests.memory.min` MiB and `.requests.cpu.min` milicores available in
+the cluster.
+- To fully scale out to the max number of replicas, need `.requests.memory.max` MiB and `.requests.cpu.max` milicores 
+available in the cluster.
+- If fully scaled out, will try to phagocyte up to `.limits.memory.max` MiB and `.requests.cpu.min` milicores.
+
 ```json
 [
   {
