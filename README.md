@@ -25,16 +25,16 @@ Choose an operation mode and pass the names of the files to parse as parameters 
 The latter option is useful in combination with `helm template`.
 
 ```shell
-./kuberes m2 example/*
+./kuberes sum example/*
 # or
-cat example/deployment.yaml | ./kuberes m2
+cat example/deployment.yaml | ./kuberes sum
 ```
 
 Take into consideration that YAML documents need to be explicitly separated by `---`, so doing something 
 like this will not work as expected:
 
 ```shell
-cat example/* | ./kuberes m2 # Documents are appended one after the other without using ---
+cat example/* | ./kuberes sum # Documents are appended one after the other without using ---
 ```
 
 ### Docker
@@ -48,7 +48,7 @@ docker build -t kuberes:latest .
 Mount the folder with the Kubernetes resources into `/data` and pass the usual CLI parameters:
 
 ```shell
-docker run --rm -v $PWD/example:/data:ro kuberes m2 '/data/*'    
+docker run --rm -v $PWD/example:/data:ro kuberes sum '/data/*'    
 ```
 
 
@@ -58,7 +58,7 @@ The tool provides different working modes depending on the desired level of info
 
 The following outputs correspond to running the tool on the files of the examples folder.
 
-### m0
+### raw
 
 Raw information from the YAML files. Also add minReplicas and maxReplicas values based on 
 Horizontal Pod Autoscalers.
@@ -179,7 +179,7 @@ Horizontal Pod Autoscalers.
 ]
 ```
 
-### m1
+### list
 
 Top level objects with lists of the underlying container requests and limits.
 
@@ -270,7 +270,7 @@ Top level objects with lists of the underlying container requests and limits.
 ```
 
 
-### m2
+### sum
 
 Top level objects with the sum of the underlying container requests and limits.
 
@@ -324,7 +324,7 @@ Top level objects with the sum of the underlying container requests and limits.
 ]
 ```
 
-### m3
+### minmax
 
 Top level objects with minRequests, minLimits, maxRequests and maxLimits, taking into consideration minReplicas 
 and maxReplicas.
@@ -402,7 +402,7 @@ and maxReplicas.
 ]
 ```
 
-### m4
+### total
 
 Summary of the total minRequests, minLimits, maxRequests and maxLimits across all objects.
 

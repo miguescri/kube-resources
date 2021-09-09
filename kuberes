@@ -1,10 +1,10 @@
 #!/bin/bash
 
-MODE_0="m0"
-MODE_1="m1"
-MODE_2="m2"
-MODE_3="m3"
-MODE_4="m4"
+MODE_0="raw"
+MODE_1="list"
+MODE_2="sum"
+MODE_3="minmax"
+MODE_4="total"
 
 finish () {
   # Print the result in a way that makes it possible to diff:
